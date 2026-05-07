@@ -1,0 +1,11 @@
+                              precision    recall  f1-score   support
+
+       Bacterial Leaf Streak     0.9948    1.0000    0.9974       190
+                 Common_rust     0.9627    1.0000    0.9810       129
+              Gray_leaf_spot     0.9986    0.9860    0.9923      1497
+                     Healthy     0.9857    0.9981    0.9919      1038
+Maize Chlorotic Mottle Virus     1.0000    1.0000    1.0000        89
+
+                    accuracy                         0.9922      2943
+                   macro avg     0.9884    0.9968    0.9925      2943
+                weighted avg     0.9923    0.9922    0.9922      2943

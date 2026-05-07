@@ -1,0 +1,44 @@
+project:
+  name: plantify-dl
+  seed: 42
+  # For fast iteration on CPU/MPS, keep this false.
+  # Turn true only for final, fully reproducible runs.
+  deterministic: false
+
+paths:
+  # PlantVillage images live in this ImageFolder-style directory (class subfolders).
+  plantvillage_root: "PlantVillage-Dataset/raw/color"
+  runs_dir: "runs"
+  checkpoints_dir: "checkpoints"
+
+data:
+  # 128 is much faster for prototyping; switch back to 224 for final results.
+  image_size: 128
+  batch_size: 64
+  num_workers: 4
+  # Only helps for CUDA; keep false for CPU/MPS.
+  pin_memory: false
+  persistent_workers: true
+  prefetch_factor: 2
+  split:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+
+model:
+  backbone: "resnet18"
+  imagenet_pretrained: false
+  dropout: 0.0
+
+train:
+  # Keep small while plumbing works; increase for final runs.
+  epochs: 5
+  lr: 0.001
+  weight_decay: 0.0001
+  optimizer: "adamw"  # adamw | sgd
+  momentum: 0.9       # used only for sgd
+  label_smoothing: 0.0
+
+logging:
+  log_every_steps: 50
+  tensorboard: true

@@ -1,0 +1,21 @@
+task: "Seasonal Corn Leaf Disease (5 classes)"
+test_images: 442
+metrics:
+  accuracy:
+    full:
+      b1_scratch: 0.9231
+      b2_imagenet: 0.9661
+      b3_pv_supervised: 0.9548
+      b4_ssl_ours: 0.9548
+    fewshot_10:
+      b1_scratch: 0.2986
+      b2_imagenet: 0.6176
+      b3_pv_supervised: 0.3982
+      b4_ssl_ours: 0.7014
+
+labels:
+  b1_scratch: "B1 — Scratch"
+  b2_imagenet: "B2 — ImageNet"
+  b3_pv_supervised: "B3 — PV Supervised"
+  b4_ssl_ours: "B4 — SSL (ours)"
+

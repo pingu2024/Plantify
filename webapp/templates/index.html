@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plantify</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: #101827;
+        --text: #e6e9ef;
+        --muted: #aab2c5;
+        --border: rgba(255,255,255,0.10);
+        --brand: #6ee7ff;
+        --btn: #1f2a44;
+        --btnHover: #2a3a60;
+        --shadow: 0 12px 30px rgba(0,0,0,0.35);
+      }
+      [data-theme="light"] {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --text: #111827;
+        --muted: #4b5563;
+        --border: rgba(17,24,39,0.12);
+        --brand: #0b57d0;
+        --btn: #eef2ff;
+        --btnHover: #e0e7ff;
+        --shadow: 0 10px 24px rgba(17,24,39,0.12);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(110,231,255,0.15), transparent 50%),
+                    radial-gradient(900px 500px at 90% 0%, rgba(99,102,241,0.15), transparent 55%),
+                    var(--bg);
+        color: var(--text);
+      }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
+      .brand p { margin: 0; color: var(--muted); font-size: 13px; }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+      code { background: rgba(127,127,127,0.18); padding: 0.15rem 0.35rem; border-radius: 6px; }
+      .row { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; }
+      @media (max-width: 780px) { .row { grid-template-columns: 1fr; } }
+      label { display: block; font-size: 14px; margin: 10px 0 6px; color: var(--muted); }
+      input[type="file"] { width: 100%; padding: 10px; border-radius: 12px; border: 1px dashed var(--border); background: transparent; color: var(--text); }
+      .actions { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+      button {
+        border: 1px solid var(--border);
+        background: var(--btn);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:hover { background: var(--btnHover); }
+      .toggle {
+        display: inline-flex; align-items: center; gap: 8px; user-select: none;
+        border: 1px solid var(--border); padding: 8px 10px; border-radius: 12px; background: var(--panel);
+      }
+      .toggle input { transform: translateY(1px); }
+      .small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    </style>
+    <script>
+      (function () {
+        const saved = localStorage.getItem("theme");
+        const theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.dataset.theme = theme;
+      })();
+      function onThemeToggle(cb) {
+        const next = cb && cb.checked ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("theme", next);
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        const cb = document.getElementById("themeToggle");
+        if (!cb) return;
+        cb.checked = document.documentElement.dataset.theme !== "light";
+      });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <h1>
+            <img src="{{ url_for('static', filename='plant.svg') }}" alt="" style="width:18px;height:18px;vertical-align:-3px;margin-right:8px;opacity:0.9" />
+            Plantify
+          </h1>
+          <p>Upload a leaf image → prediction + confidence + Grad-CAM</p>
+        </div>
+        <label class="toggle" title="Toggle light/dark">
+          <input id="themeToggle" type="checkbox" onchange="onThemeToggle(this)" />
+          <span class="small">Dark</span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <form action="/predict" method="post" enctype="multipart/form-data">
+            <label>Leaf image</label>
+            <input type="file" name="image" accept="image/*" required />
+            <div class="actions">
+              <button type="submit">Predict</button>
+              <span class="small">Tip: tighter crop of the leaf → better explanations.</span>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <label>Loaded checkpoint</label>
+          <div class="small"><code>{{ ckpt }}</code></div>
+          <div style="height:10px"></div>
+          <div class="small">
+            This demo uses a lightweight ResNet-18 model trained with different pretraining recipes (ImageNet / PlantVillage supervised / PlantVillage SimCLR).
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

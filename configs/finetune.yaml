@@ -1,0 +1,43 @@
+project:
+  name: plantify-dl
+  seed: 42
+  deterministic: false
+
+paths:
+  target_root: "data/corn_leaf"
+  runs_dir: "runs"
+  checkpoints_dir: "checkpoints"
+  # Used when init is ssl or supervised_pv
+  pretrained_path: "checkpoints/pv_sup_1778102707_best.pt"
+
+data:
+  image_size: 128
+  batch_size: 32
+  num_workers: 4
+  pin_memory: false
+  prefetch_factor: 2
+  split:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+  # Few-shot: cap labeled train images per class (null = use full train split)
+  fewshot_per_class: 10
+
+# init: imagenet | scratch | ssl | supervised_pv
+finetune:
+  init: imagenet
+  dropout: 0.0
+  freeze_backbone_epochs: 0
+  epochs: 15
+  lr: 0.0003
+  weight_decay: 0.0001
+  optimizer: adamw
+  momentum: 0.9
+  label_smoothing: 0.0
+
+model:
+  backbone: resnet18
+
+logging:
+  log_every_steps: 25
+  tensorboard: true

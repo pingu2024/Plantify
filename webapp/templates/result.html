@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plantify</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: #101827;
+        --text: #e6e9ef;
+        --muted: #aab2c5;
+        --border: rgba(255,255,255,0.10);
+        --brand: #6ee7ff;
+        --shadow: 0 12px 30px rgba(0,0,0,0.35);
+      }
+      [data-theme="light"] {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --text: #111827;
+        --muted: #4b5563;
+        --border: rgba(17,24,39,0.12);
+        --brand: #0b57d0;
+        --shadow: 0 10px 24px rgba(17,24,39,0.12);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(110,231,255,0.15), transparent 50%),
+                    radial-gradient(900px 500px at 90% 0%, rgba(99,102,241,0.15), transparent 55%),
+                    var(--bg);
+        color: var(--text);
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 32px 16px; }
+      .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+      .top h1 { margin: 0; font-size: 18px; letter-spacing: 0.2px; }
+      .pill { border: 1px solid var(--border); background: var(--panel); padding: 8px 10px; border-radius: 999px; color: var(--muted); font-size: 12px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; }
+      .pred { font-size: 22px; font-weight: 800; margin: 2px 0 6px; }
+      .muted { color: var(--muted); font-size: 13px; line-height: 1.4; }
+      table { border-collapse: collapse; width: 100%; margin-top: 10px; overflow: hidden; border-radius: 12px; }
+      th, td { border-bottom: 1px solid var(--border); padding: 10px 10px; text-align: left; font-size: 13px; }
+      th { color: var(--muted); font-weight: 700; }
+      tr:last-child td { border-bottom: none; }
+      .bar { height: 8px; border-radius: 999px; background: rgba(127,127,127,0.18); overflow: hidden; }
+      .bar > div { height: 100%; background: linear-gradient(90deg, var(--brand), rgba(99,102,241,0.85)); }
+      img { width: 100%; height: auto; margin-top: 10px; border-radius: 14px; border: 1px solid var(--border); }
+      a { color: var(--brand); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+    <script>
+      (function () {
+        const saved = localStorage.getItem("theme");
+        const theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <h1>
+          <img src="{{ url_for('static', filename='plant.svg') }}" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:8px;opacity:0.9" />
+          Plantify
+        </h1>
+        <span class="pill"><a href="/">Upload another</a></span>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="muted">Prediction</div>
+          <div class="pred">{{ label }}</div>
+          <div class="muted">Confidence: <strong>{{ confidence }}</strong></div>
+
+          <div style="height: 12px"></div>
+          <div class="muted">Top-5 probabilities</div>
+          <table>
+            <thead><tr><th>Class</th><th style="width: 120px">Prob</th><th> </th></tr></thead>
+            <tbody>
+              {% for name, p in ranked %}
+              <tr>
+                <td>{{ name }}</td>
+                <td>{{ "%.4f"|format(p) }}</td>
+                <td>
+                  <div class="bar"><div style="width: {{ (p * 100) | round(2) }}%"></div></div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="muted">Visual explanation (Grad-CAM)</div>
+          {% if heatmap_url %}
+            <img src="{{ heatmap_url }}" alt="Grad-CAM overlay" />
+          {% else %}
+            <div style="height: 10px"></div>
+            <div class="muted"><em>Heatmap unavailable (library or device fallback issue).</em></div>
+          {% endif %}
+          <div style="height: 10px"></div>
+          <div class="muted">
+            Tip: the heatmap is more meaningful when the image is a tight crop of the leaf.
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
