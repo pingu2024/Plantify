@@ -2,6 +2,8 @@
 
 Course project: plant leaf disease recognition with a small, reproducible **lab → field** pipeline (source: PlantVillage, target: Seasonal Corn Leaf), plus a lightweight web demo.
 
+It also includes an OpenCV leaf / lesion analysis and ONNX export for inference with OpenCV DNN.
+
 ## Project Question
 
 Using an off-the-shelf backbone (ResNet-18) and simple training recipes, **how much robustness under lab→field domain shift can we gain** by doing PlantVillage **self-supervised (SimCLR)** pretraining before fine-tuning on a small labeled corn field dataset?
@@ -17,6 +19,7 @@ We report results honestly for:
 - **Deep learning**: PyTorch + torchvision (ResNet-18)
 - **Self-supervised learning**: SimCLR (contrastive pretraining on PlantVillage)
 - **Explainability**: Grad-CAM (`grad-cam`)
+- **Computer vision**: OpenCV (segmentation, ONNX inference via the DNN module)
 - **Web demo**: Flask + simple HTML/CSS
 - **Logging**: TensorBoard
 
@@ -108,6 +111,34 @@ export PLANTIFY_CKPT="$(pwd)/checkpoints/corn_ft_ssl_best.pt"
 
 Open `http://127.0.0.1:5000`.
 
+## 6) OpenCV Leaf & Lesion Analysis
+
+A rule-based pass next to the CNN: LAB + Otsu thresholding finds the leaf, morphology cleans the mask, and HSV/LAB colour rules mark lesion-like regions with bounding boxes. It's also shown in the web demo.
+
+```bash
+./venv/bin/python -m src.cv_preprocess path/to/leaf.jpg
+```
+
+![OpenCV analysis, common rust](assets/opencv/common_rust_analysis.jpg)
+
+## 7) ONNX Export + OpenCV DNN
+
+```bash
+./venv/bin/python -m src.export_onnx --ckpt checkpoints/b2_imagenet_full_best.pt
+./venv/bin/python -m src.infer_opencv --model exports/b2_imagenet_full.onnx path/to/leaf.jpg
+```
+
+The export script checks the ONNX model against PyTorch; on 100 corn images, OpenCV DNN gave the same predictions.
+
+## 8) C++ Inference (learning experiment)
+
+A small C++ program (`cpp/infer.cpp`) that runs the same ONNX model with OpenCV C++. I added it to start learning OpenCV's C++ API; it mirrors `src/infer_opencv.py`.
+
+```bash
+cmake -S cpp -B cpp/build && cmake --build cpp/build
+./cpp/build/plantify_infer exports/b2_imagenet_full.onnx path/to/leaf.jpg
+```
+
 ## Plots per Checkpoint
 
 Confusion matrix + per-class metrics:
@@ -134,6 +165,7 @@ This writes `assets/plots/baseline_comparison.png` (accuracy + error rate for fu
 - **Quality vs speed**: for better results, upgrade `image_size` to **224** in configs (training is slower but features are richer).
 - **Checkpoints** from `train_supervised` / `train_finetune` contain `model_state` + `class_names` for inference.
 - **SimCLR checkpoints** contain `encoder_state` only — not directly usable for classification without a fine-tuning head.
+- **OpenCV analysis is a heuristic**: it can box soil between leaves and miss pale grey lesions.
 - **Limitations**: experiments were constrained by laptop compute and time. SimCLR was trained for 5 epochs (sufficient for a course-level system study; a production SSL pipeline would use 100–200 epochs with a larger batch size).
 
 ---

@@ -49,6 +49,12 @@
       .bar { height: 8px; border-radius: 999px; background: rgba(127,127,127,0.18); overflow: hidden; }
       .bar > div { height: 100%; background: linear-gradient(90deg, var(--brand), rgba(99,102,241,0.85)); }
       img { width: 100%; height: auto; margin-top: 10px; border-radius: 14px; border: 1px solid var(--border); }
+      .wide { grid-column: 1 / -1; }
+      .split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; align-items: start; }
+      @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+      .stat { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      .stat:last-of-type { border-bottom: none; }
+      .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
       a { color: var(--brand); text-decoration: none; }
       a:hover { text-decoration: underline; }
     </style>
@@ -105,6 +111,32 @@
           <div style="height: 10px"></div>
           <div class="muted">
             Tip: the heatmap is more meaningful when the image is a tight crop of the leaf.
+          </div>
+        </div>
+
+        <div class="card wide">
+          <div class="muted">Leaf &amp; lesion analysis (classical OpenCV)</div>
+          <div class="split">
+            <img src="{{ cv_url }}" alt="OpenCV leaf and lesion overlay" />
+            <div>
+              <div style="height: 10px"></div>
+              <div class="stat"><span class="muted">Leaf coverage</span><strong>{{ leaf_pct }}</strong></div>
+              <div class="stat"><span class="muted">Lesion-like area (of leaf)</span><strong>{{ lesion_pct }}</strong></div>
+              <div class="stat"><span class="muted">Lesion regions</span><strong>{{ lesion_regions }}</strong></div>
+              <div class="stat"><span class="muted">Processing time</span><strong>{{ cv_ms }} ms</strong></div>
+              <div style="height: 12px"></div>
+              <div class="muted legend">
+                <div><span style="background:#50dc50"></span>leaf outline (LAB a* + Otsu, morphology)</div>
+                <div><span style="background:#ffd700"></span>lesion boxes (HSV / LAB colour rules)</div>
+                <div><span style="background:#e62828"></span>lesion-like pixels</div>
+                <div><span style="background:#28a0ff"></span>leaf bounding box</div>
+              </div>
+              <div style="height: 12px"></div>
+              <div class="muted">
+                Rule-based colour segmentation, independent of the CNN. It marks yellow, tan and brown tissue,
+                so neighbouring leaves or soil can occasionally be flagged; treat it as a visual aid, not a diagnosis.
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 from flask import Flask, redirect, render_template, request, url_for
@@ -17,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from src.cv_preprocess import analyze_leaf, draw_analysis
 from src.inference import eval_transform, load_classifier_checkpoint, predict_pil
 from src.utils import get_device
 
@@ -49,6 +52,7 @@ def create_app() -> Flask:
     static_dir = base / "static"
     static_dir.mkdir(parents=True, exist_ok=True)
     app.config["HEATMAP_PATH"] = static_dir / "last_cam.png"
+    app.config["CV_PATH"] = static_dir / "last_cv.jpg"
 
     @app.get("/")
     def index():
@@ -94,9 +98,17 @@ def create_app() -> Flask:
             vis = show_cam_on_image(rgb, g, use_rgb=True)
             out = app.config["HEATMAP_PATH"]
             Image.fromarray(vis).save(out)
-            heatmap_url = url_for("static", filename="last_cam.png")
+            # Query string stops the browser from showing the previous upload's image.
+            heatmap_url = url_for("static", filename="last_cam.png", t=int(time.time() * 1000))
         except Exception:
             heatmap_url = None
+
+        # Classical OpenCV leaf / lesion analysis, shown next to the CNN output.
+        bgr = cv2.cvtColor(np.asarray(pil), cv2.COLOR_RGB2BGR)
+        t0 = time.perf_counter()
+        analysis = analyze_leaf(bgr)
+        cv_ms = (time.perf_counter() - t0) * 1000.0
+        cv2.imwrite(str(app.config["CV_PATH"]), draw_analysis(bgr, analysis))
 
         return render_template(
             "result.html",
@@ -104,6 +116,11 @@ def create_app() -> Flask:
             confidence=f"{conf:.4f}",
             ranked=ranked[:5],
             heatmap_url=heatmap_url,
+            cv_url=url_for("static", filename="last_cv.jpg", t=int(time.time() * 1000)),
+            leaf_pct=f"{analysis.leaf_fraction:.1%}",
+            lesion_pct=f"{analysis.lesion_fraction:.1%}",
+            lesion_regions=len(analysis.lesion_boxes),
+            cv_ms=f"{cv_ms:.0f}",
         )
 
     return app
